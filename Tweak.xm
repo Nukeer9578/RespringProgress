@@ -45,18 +45,20 @@ static volatile int64_t ping = 0;
 int classSkipCount = 8;
 int averageObjectCount = pow(10, 7); //assuming this is how many objects SB creates (9.0 on 6s+ will be close to this)
 
-%hook SBMappedImageCache //first SB class called in SpringBoards entrypoint
+%hook SpringBoard
 
-+ (id)persistentCache {
+- (void)applicationDidFinishLaunching:(UIApplication *)application {
 
     __block clock_t begin, end;
     __block double time_spent;
     begin = clock();
 
+    __block NSDictionary *storedData;
+
     static dispatch_once_t swizzleOnce;
     dispatch_once(&swizzleOnce, ^{
 
-        NSDictionary *storedData = [[NSDictionary alloc] initWithContentsOfFile:@"/var/mobile/Library/Preferences/com.abusing_sb.plist"];
+        storedData = [[NSDictionary alloc] initWithContentsOfFile:@"/var/mobile/Library/Preferences/com.abusing_sb.plist"];
         if (![storedData valueForKey:@"deviceInits"]) {
             classSkipCount = 1;
         } else {
@@ -118,28 +120,21 @@ int averageObjectCount = pow(10, 7); //assuming this is how many objects SB crea
             }
         }
 
-        IMP originalFinishBlock = class_getMethodImplementation(objc_getClass("SBUIController"), @selector(finishLaunching));
-        IMP newFinishBlock = imp_implementationWithBlock(^(id _self, SEL selector) {
-            originalFinishBlock(_self, @selector(finishLaunching));
-            int64_t finalObjectCount = ping;
-            ping = -1;
-            end = clock();
-            time_spent = (double)(end - begin) / CLOCKS_PER_SEC;
-            HBLogDebug(@"Springboard launched with %lld -init calls, estimation of %d off by %.2f%%, in %.2f seconds", finalObjectCount, averageObjectCount, (ABS(finalObjectCount - ((float)averageObjectCount / classSkipCount)) / ((finalObjectCount + ((float)averageObjectCount / classSkipCount)) / 2)) * 100, time_spent);
-
-            if (![storedData valueForKey:@"deviceInits"]) {
-                NSDictionary *newData = @{ @"deviceInits" : @(finalObjectCount) };
-                [newData writeToFile:@"/var/mobile/Library/Preferences/com.abusing_sb.plist" atomically:YES];
-            }
-
-        });
-
-        method_setImplementation(class_getInstanceMethod(objc_getClass("SBUIController"), @selector(finishLaunching)), newFinishBlock);
 
     });
 
-    return %orig;
+    %orig;
 
+    int64_t finalObjectCount = ping;
+    ping = -1;
+    end = clock();
+    time_spent = (double)(end - begin) / CLOCKS_PER_SEC;
+    HBLogDebug(@"Springboard launched with %lld -init calls, estimation of %d off by %.2f%%, in %.2f seconds", finalObjectCount, averageObjectCount, (ABS(finalObjectCount - ((float)averageObjectCount / classSkipCount)) / ((finalObjectCount + ((float)averageObjectCount / classSkipCount)) / 2)) * 100, time_spent);
+
+    if (![storedData valueForKey:@"deviceInits"]) {
+        NSDictionary *newData = @{ @"deviceInits" : @(finalObjectCount) };
+        [newData writeToFile:@"/var/mobile/Library/Preferences/com.abusing_sb.plist" atomically:YES];
+    } 
 }
 
 %end
