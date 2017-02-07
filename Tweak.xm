@@ -21,9 +21,11 @@ PUIProgressWindow *window;
 
 %hook BKDisplayRenderOverlaySpinny
 
--(BKDisplayRenderOverlaySpinny *)initWithOverlayDescriptor:(id)arg1 level:(float)arg2{
+-(id)initWithOverlayDescriptor:(id)arg1 level:(float)arg2{
+    HBLogDebug(@"Display spinning")
     if (window == nil)
     {
+        HBLogDebug(@"drawing window");
         window = [[PUIProgressWindow alloc] initWithProgressBarVisibility:YES createContext:YES contextLevel:1000 appearance:1];
         [window setVisible:YES];
     }
@@ -31,20 +33,14 @@ PUIProgressWindow *window;
 }
 
 - (BOOL) presentWithAnimationSettings:(id)arg1{
+    HBLogDebug(@"hide spinner")
     return true;
 }
 
 %end
 
 
-
-
 %hook PUIProgressWindow
-
--(id)init{
-    HBLogDebug(@"Init");
-    return %orig;
-}
 
 - (id)initWithProgressBarVisibility:(BOOL)arg1 createContext:(BOOL)arg2 contextLevel:(float)arg3 appearance:(int)arg4 {
 
@@ -182,6 +178,13 @@ int averageObjectCount = pow(10, 7); //assuming this is how many objects SB crea
     end = clock();
     time_spent = (double)(end - begin) / CLOCKS_PER_SEC;
     HBLogDebug(@"Springboard launched with %lld -init calls, estimation of %d off by %.2f%%, in %.2f seconds", finalObjectCount, averageObjectCount, (ABS(finalObjectCount - ((float)averageObjectCount / classSkipCount)) / ((finalObjectCount + ((float)averageObjectCount / classSkipCount)) / 2)) * 100, time_spent);
+    int32_t local = 100;
+    CFMessagePortRef port = CFMessagePortCreateRemote(kCFAllocatorDefault, CFSTR("com.ethanarbuckle.launch-progress"));
+    int progressPointer = local;
+    NSData *progressMessage = [NSData dataWithBytes:&local length:sizeof(progressPointer)];
+    if (port > 0) {
+        CFMessagePortSendRequest(port, 0, (CFDataRef)progressMessage, 1000, 0, NULL, NULL);
+    }
     if (![storedData valueForKey:@"deviceInits"]) {
         NSDictionary *newData = @{ @"deviceInits" : @(finalObjectCount) };
         [newData writeToFile:@"/var/mobile/Library/Preferences/com.abusing_sb.plist" atomically:YES];
