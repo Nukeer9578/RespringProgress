@@ -26,7 +26,8 @@ PUIProgressWindow *window;
     if (window == nil)
     {
         HBLogDebug(@"drawing window");
-        window = [[PUIProgressWindow alloc] initWithProgressBarVisibility:YES createContext:YES contextLevel:1000 appearance:1];
+        window = [[PUIProgressWindow alloc] initWithProgressBarVisibility:YES createContext:YES contextLevel:1000 appearance:0];
+        [window setProgressValue:0.01];
         [window setVisible:YES];
     }
     return %orig(arg1, -1);
@@ -55,7 +56,7 @@ PUIProgressWindow *window;
 CFDataRef receiveProgress(CFMessagePortRef local, SInt32 msgid, CFDataRef data, void *info) {
     if (window == nil)
     {
-        window = [[PUIProgressWindow alloc] initWithProgressBarVisibility:YES createContext:YES contextLevel:1000 appearance:1];
+        window = [[PUIProgressWindow alloc] initWithProgressBarVisibility:YES createContext:YES contextLevel:1000 appearance:0];
         [window setVisible:true];
     }
     HBLogDebug(@"receiving shit");
@@ -123,7 +124,7 @@ int averageObjectCount = pow(10, 7); //assuming this is how many objects SB crea
                 int32_t currentProgress = ((float)100 / (averageObjectCount / classSkipCount)) * ping;
                 //HBLogDebug(@"after:");
                 //HBLogDebug(@"%d", currentProgress)
-                if (currentProgress > local) { //6 seems to be a good interval to prevent screen flashes
+                if (currentProgress > local && (((currentProgress % 6) == 0) || currentProgress >= 90)) { //6 seems to be a good interval to prevent screen flashes
                     local = currentProgress;
                     if (port > 0) {
                         int progressPointer = local;
