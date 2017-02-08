@@ -11,7 +11,6 @@
 @interface BKDisplayRenderOverlaySpinny
 -(id)level;
 -(void)_useLightBackground;
-
 @end
 
 CFDataRef receiveProgress(CFMessagePortRef local, SInt32 msgid, CFDataRef data, void *info);
@@ -22,10 +21,8 @@ PUIProgressWindow *window;
 %hook BKDisplayRenderOverlaySpinny
 
 -(id)initWithOverlayDescriptor:(id)arg1 level:(float)arg2{
-    HBLogDebug(@"Display spinning")
-    if (window == nil)
+    if (window == nil && arg2 > -1)
     {
-        HBLogDebug(@"drawing window");
         window = [[PUIProgressWindow alloc] initWithProgressBarVisibility:YES createContext:YES contextLevel:1000 appearance:0];
         [window setProgressValue:0.01];
         [window setVisible:YES];
@@ -34,19 +31,16 @@ PUIProgressWindow *window;
 }
 
 - (BOOL) presentWithAnimationSettings:(id)arg1{
-    HBLogDebug(@"hide spinner")
     return true;
 }
 
 %end
-
 
 %hook PUIProgressWindow
 
 - (id)initWithProgressBarVisibility:(BOOL)arg1 createContext:(BOOL)arg2 contextLevel:(float)arg3 appearance:(int)arg4 {
 
     
-    HBLogDebug(@"drawing shit");
     CFMessagePortRef port = CFMessagePortCreateLocal(kCFAllocatorDefault, CFSTR("com.ethanarbuckle.launch-progress"), &receiveProgress, NULL, NULL);
     CFMessagePortSetDispatchQueue(port, dispatch_get_main_queue());
     window = %orig(YES, arg2, arg3, arg4);
@@ -59,20 +53,20 @@ CFDataRef receiveProgress(CFMessagePortRef local, SInt32 msgid, CFDataRef data, 
         window = [[PUIProgressWindow alloc] initWithProgressBarVisibility:YES createContext:YES contextLevel:1000 appearance:0];
         [window setVisible:true];
     }
-    HBLogDebug(@"receiving shit");
     NSData *receivedData = (NSData *)data;
     int progressPointer;
     [receivedData getBytes:&progressPointer length:sizeof(progressPointer)];
 
-    if(progressPointer < 94)
+    if(progressPointer < 95)
     {
         [window setProgressValue:(float)progressPointer / 100];
 
-    //[window _createLayer];
+        [window _createLayer];
         [window setVisible:true];
     }
     else
     {
+        [window _createLayer];
         [window setVisible:false];
     }
     
@@ -97,15 +91,12 @@ int averageObjectCount = pow(10, 7); //assuming this is how many objects SB crea
     begin = clock();
 
     __block NSDictionary *storedData;
-
     [window init];    
-    //window = [[PUIProgressWindow alloc] initWithProgressBarVisibility:YES createContext:YES contextLevel:8000 appearance:1];
     [window setProgressValue:0.01];
     [window setVisible:YES];
 
     static dispatch_once_t swizzleOnce;
     dispatch_once(&swizzleOnce, ^{ 
-
         storedData = [[NSDictionary alloc] initWithContentsOfFile:@"/var/mobile/Library/Preferences/com.abusing_sb.plist"];
         if (![storedData valueForKey:@"deviceInits"]) {
             classSkipCount = 1;
@@ -120,11 +111,8 @@ int averageObjectCount = pow(10, 7); //assuming this is how many objects SB crea
             CFMessagePortRef port = CFMessagePortCreateRemote(kCFAllocatorDefault, CFSTR("com.ethanarbuckle.launch-progress"));
             int32_t local = 0;
             while (ping <= (averageObjectCount / classSkipCount) && ping > -1) {
-                //HBLogDebug(@"before:");
                 int32_t currentProgress = ((float)100 / (averageObjectCount / classSkipCount)) * ping;
-                //HBLogDebug(@"after:");
-                //HBLogDebug(@"%d", currentProgress)
-                if (currentProgress > local && (((currentProgress % 6) == 0) || currentProgress >= 90)) { //6 seems to be a good interval to prevent screen flashes
+                if (currentProgress > local && (((currentProgress % 2) == 0) || currentProgress >= 94)) { //6 seems to be a good interval to prevent screen flashes
                     local = currentProgress;
                     if (port > 0) {
                         int progressPointer = local;
@@ -179,6 +167,7 @@ int averageObjectCount = pow(10, 7); //assuming this is how many objects SB crea
     end = clock();
     time_spent = (double)(end - begin) / CLOCKS_PER_SEC;
     HBLogDebug(@"Springboard launched with %lld -init calls, estimation of %d off by %.2f%%, in %.2f seconds", finalObjectCount, averageObjectCount, (ABS(finalObjectCount - ((float)averageObjectCount / classSkipCount)) / ((finalObjectCount + ((float)averageObjectCount / classSkipCount)) / 2)) * 100, time_spent);
+    
     int32_t local = 100;
     CFMessagePortRef port = CFMessagePortCreateRemote(kCFAllocatorDefault, CFSTR("com.ethanarbuckle.launch-progress"));
     int progressPointer = local;
