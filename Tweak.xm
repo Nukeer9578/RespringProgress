@@ -8,14 +8,20 @@
 -(id)initWithProgressBarVisibility:(BOOL)arg1 createContext:(BOOL)arg2 contextLevel:(float)arg3 appearance:(int)arg4;
 @end
 
-@interface BKDisplayRenderOverlaySpinny
--(id)level;
--(void)_useLightBackground;
-@end
-
 CFDataRef receiveProgress(CFMessagePortRef local, SInt32 msgid, CFDataRef data, void *info);
 
 PUIProgressWindow *window;
+
+%hook BKSystemAppSentinel
+
+
+- (void) _handleRelaunchRequestFromSystemApp:(id)arg1 withOptions:(unsigned long)arg2{
+    arg2 = 2;
+    %orig;
+}
+
+
+%end
 
 
 %hook BKDisplayRenderOverlaySpinny
