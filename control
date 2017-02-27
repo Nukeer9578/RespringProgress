@@ -1,10 +1,9 @@
 Package: com.ethanarbuckle.respringprogress
 Name: RespringProgress
 Depends: mobilesubstrate
-Version: 0.0.3.4
+Version: 0.0.5
 Architecture: iphoneos-arm
 Description: Adds a progress bar under the Apple logo during resprings that tracks SpringBoards launch progress
-Maintainer: Ethan Arbuckle
+Maintainer: Wizages
 Author: Ethan Arbuckle
 Section: Tweaks
-Depiction: http://wizages.com/cydia/depictions/?dep=com.ethanarbuckle.respringprogress

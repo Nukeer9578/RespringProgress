@@ -58,6 +58,7 @@ CFDataRef receiveProgress(CFMessagePortRef local, SInt32 msgid, CFDataRef data, 
     {
         window = [[PUIProgressWindow alloc] initWithProgressBarVisibility:YES createContext:YES contextLevel:1000 appearance:0];
         [window setVisible:true];
+        [window _createLayer];
     }
     NSData *receivedData = (NSData *)data;
     int progressPointer;
@@ -67,7 +68,6 @@ CFDataRef receiveProgress(CFMessagePortRef local, SInt32 msgid, CFDataRef data, 
     {
         [window setProgressValue:(float)progressPointer / 100];
 
-        [window _createLayer];
         [window setVisible:true];
     }
     else
