@@ -4,6 +4,6 @@ Depends: mobilesubstrate
 Version: 0.0.5
 Architecture: iphoneos-arm
 Description: Adds a progress bar under the Apple logo during resprings that tracks SpringBoards launch progress
-Maintainer: Wizages
+Maintainer: ARM64e-Darwin1820 (forked from Wizages)
 Author: Ethan Arbuckle
 Section: Tweaks

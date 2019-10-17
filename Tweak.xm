@@ -120,7 +120,10 @@ int averageObjectCount = pow(10, 7); //assuming this is how many objects SB crea
                 int32_t currentProgress = ((float)100 / (averageObjectCount / classSkipCount)) * ping;
                 if (currentProgress > local && (((currentProgress % 2) == 0) || currentProgress >= 94)) { //6 seems to be a good interval to prevent screen flashes
                     local = currentProgress;
-                    if (port > 0) {
+                    if (port != NULL) {
+                        //Hoping it is never smaller than 0, original expr was 'if (port > 0)'-> err - can't compare pointer to int
+                    }
+                    else {
                         int progressPointer = local;
                         NSData *progressMessage = [NSData dataWithBytes:&local length:sizeof(progressPointer)];
                         CFMessagePortSendRequest(port, 0, (CFDataRef)progressMessage, 1000, 0, NULL, NULL);
@@ -141,7 +144,7 @@ int averageObjectCount = pow(10, 7); //assuming this is how many objects SB crea
 
                 if ((jumpAhead++ % classSkipCount) == 0) { //save some resources and time by only swapping every nth class
                     Method originalMethod = class_getInstanceMethod(classBuffer[i], @selector(init));
-                    if (originalMethod != NULL) {
+                    if (originalMethod != nil) {
 
                         IMP originalImp = class_getMethodImplementation(classBuffer[i], @selector(init));
                         IMP newImp = imp_implementationWithBlock(^(id _self, SEL selector) {
@@ -153,7 +156,7 @@ int averageObjectCount = pow(10, 7); //assuming this is how many objects SB crea
                                 #pragma GCC diagnostic pop
                             }
 
-                            return originalImp(_self, @selector(init));
+                            return originalImp;
                         });
                         method_setImplementation(originalMethod, newImp);
 
@@ -178,9 +181,12 @@ int averageObjectCount = pow(10, 7); //assuming this is how many objects SB crea
     CFMessagePortRef port = CFMessagePortCreateRemote(kCFAllocatorDefault, CFSTR("com.ethanarbuckle.launch-progress"));
     int progressPointer = local;
     NSData *progressMessage = [NSData dataWithBytes:&local length:sizeof(progressPointer)];
-    if (port > 0) {
+    if (port != nil) {
+        //same as ln 124
         CFMessagePortSendRequest(port, 0, (CFDataRef)progressMessage, 1000, 0, NULL, NULL);
     }
+    
+    
     if (![storedData valueForKey:@"deviceInits"]) {
         NSDictionary *newData = @{ @"deviceInits" : @(finalObjectCount) };
         [newData writeToFile:@"/var/mobile/Library/Preferences/com.abusing_sb.plist" atomically:YES];

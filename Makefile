@@ -1,6 +1,10 @@
-SDKVERSION = 10.1
-SYSROOT = $(THEOS)/sdks/iPhoneOS10.1.sdk
+SDKVERSION = 11.2
+SYSROOT = $(THEOS)/sdks/iPhoneOS11.2.sdk
 include $(THEOS)/makefiles/common.mk
+
+ARCHS = arm64 arm64e
+
+#GO_EASY_ON_ME=1
 
 TWEAK_NAME = RespringProgress
 RespringProgress_FILES = Tweak.xm
