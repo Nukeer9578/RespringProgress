@@ -4,7 +4,7 @@ include $(THEOS)/makefiles/common.mk
 
 ARCHS = arm64 arm64e
 
-#GO_EASY_ON_ME=1
+GO_EASY_ON_ME=1
 
 TWEAK_NAME = RespringProgress
 RespringProgress_FILES = Tweak.xm
