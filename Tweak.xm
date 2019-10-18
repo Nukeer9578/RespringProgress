@@ -85,7 +85,7 @@ CFDataRef receiveProgress(CFMessagePortRef local, SInt32 msgid, CFDataRef data, 
 static volatile int64_t ping = 0;
 
 //1 counts every init, but takes the longest. Higher the number, fast the loading, but less accurate. i like 8-12
-int classSkipCount = 8;
+int classSkipCount = 1;
 int averageObjectCount = pow(10, 7); //assuming this is how many objects SB creates (9.0 on 6s+ will be close to this)
 
 %hook SpringBoard
@@ -180,9 +180,7 @@ int averageObjectCount = pow(10, 7); //assuming this is how many objects SB crea
     int progressPointer = local;
     NSData *progressMessage = [NSData dataWithBytes:&local length:sizeof(progressPointer)];
     
-    if([port isEqual:@0]){
-        int portint = 0;
-    } else if (port != NULL || port != nil) {
+    if (port != NULL || port != nil) {
         //same as ln 124
         CFMessagePortSendRequest(port, 0, (CFDataRef)progressMessage, 1000, 0, NULL, NULL);
     }
