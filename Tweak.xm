@@ -120,7 +120,7 @@ int averageObjectCount = pow(10, 7); //assuming this is how many objects SB crea
                 int32_t currentProgress = ((float)100 / (averageObjectCount / classSkipCount)) * ping;
                 if (currentProgress > local && (((currentProgress % 2) == 0) || currentProgress >= 94)) { //6 seems to be a good interval to prevent screen flashes
                     local = currentProgress;
-                    if (port) {
+                    if (CFMessagePortIsValid(port)) {
                         //Hoping it is never smaller than 0, original expr was 'if (port > 0)'-> err - can't compare pointer to int
                         int progressPointer = local;
                         NSData *progressMessage = [NSData dataWithBytes:&local length:sizeof(progressPointer)];
@@ -180,7 +180,7 @@ int averageObjectCount = pow(10, 7); //assuming this is how many objects SB crea
     int progressPointer = local;
     NSData *progressMessage = [NSData dataWithBytes:&local length:sizeof(progressPointer)];
     
-    if (port != NULL || port != nil) {
+    if (CFMessagePortIsValid(port)) {
         //same as ln 124
         CFMessagePortSendRequest(port, 0, (CFDataRef)progressMessage, 1000, 0, NULL, NULL);
     }
